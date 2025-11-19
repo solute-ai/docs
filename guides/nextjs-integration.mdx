@@ -1,0 +1,387 @@
+---
+title: "Next.js Integration"
+description: "Integrate Solute SDK with Next.js App Router"
+---
+
+## Next.js Integration
+
+The Solute SDK provides first-class support for Next.js App Router with React hooks, server-side utilities, and middleware.
+
+## Setup
+
+### 1. Install the SDK
+
+```bash
+npm install @solute-ai/sdk
+```
+
+### 2. Create Provider Wrapper
+
+Create a client component wrapper for the provider:
+
+```tsx
+// components/providers/SoluteProviderWrapper.tsx
+'use client';
+
+import { SoluteProvider } from '@solute-ai/sdk/nextjs';
+
+export function SoluteProviderWrapper({ children }) {
+  return (
+    <SoluteProvider
+      config={{
+        apiKey: process.env.NEXT_PUBLIC_SOLUTE_API_KEY!,
+        host: process.env.NEXT_PUBLIC_SOLUTE_HOST || 'https://api.solute.dev',
+        debug: process.env.NODE_ENV === 'development',
+      }}
+    >
+      {children}
+    </SoluteProvider>
+  );
+}
+```
+
+### 3. Add to Root Layout
+
+```tsx
+// app/layout.tsx
+import { SoluteProviderWrapper } from '@/components/providers/SoluteProviderWrapper';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <SoluteProviderWrapper>
+          {children}
+        </SoluteProviderWrapper>
+      </body>
+    </html>
+  );
+}
+```
+
+## React Hooks
+
+Use hooks in client components to access SDK functionality.
+
+### useTrack
+
+Track events in client components:
+
+```tsx
+'use client';
+
+import { useTrack } from '@solute-ai/sdk/nextjs';
+
+export function SignupButton() {
+  const track = useTrack();
+
+  const handleClick = () => {
+    track('Signup Button Clicked', {
+      button_id: 'header-cta',
+      page: '/homepage',
+    });
+  };
+
+  return <button onClick={handleClick}>Sign Up</button>;
+}
+```
+
+### useIdentify
+
+Identify users:
+
+```tsx
+'use client';
+
+import { useIdentify } from '@solute-ai/sdk/nextjs';
+
+export function LoginForm() {
+  const identify = useIdentify();
+
+  const handleLogin = async (userData: { id: string; email: string }) => {
+    identify(userData.id, {
+      email: userData.email,
+    });
+  };
+
+  return <form onSubmit={handleLogin}>...</form>;
+}
+```
+
+### useFeatureEnabled
+
+Check if a feature is enabled:
+
+```tsx
+'use client';
+
+import { useFeatureEnabled } from '@solute-ai/sdk/nextjs';
+
+export function CheckoutButton() {
+  const showNewCheckout = useFeatureEnabled('new-checkout-flow');
+
+  return (
+    <div>
+      {showNewCheckout ? (
+        <NewCheckoutButton />
+      ) : (
+        <OldCheckoutButton />
+      )}
+    </div>
+  );
+}
+```
+
+### useExperiment
+
+Get A/B test variant:
+
+```tsx
+'use client';
+
+import { useExperiment } from '@solute-ai/sdk/nextjs';
+
+export function PricingPage() {
+  const variant = useExperiment('pricing-test');
+
+  return (
+    <div>
+      {variant === 'variant-a' ? (
+        <NewPricingLayout />
+      ) : (
+        <OriginalPricingLayout />
+      )}
+    </div>
+  );
+}
+```
+
+### useUser
+
+Get user information:
+
+```tsx
+'use client';
+
+import { useUser } from '@solute-ai/sdk/nextjs';
+
+export function UserInfo() {
+  const { userId, anonymousId, sessionId } = useUser();
+
+  return (
+    <div>
+      <p>User ID: {userId || 'Anonymous'}</p>
+      <p>Anonymous ID: {anonymousId}</p>
+      <p>Session: {sessionId}</p>
+    </div>
+  );
+}
+```
+
+### useSolute
+
+Access the full SDK instance:
+
+```tsx
+'use client';
+
+import { useSolute } from '@solute-ai/sdk/nextjs';
+
+export function MyComponent() {
+  const { track, identify, client } = useSolute();
+
+  // Use any SDK method
+  const handleAction = () => {
+    track('Action', { type: 'custom' });
+    identify('user_123', { email: 'user@example.com' });
+  };
+
+  return <button onClick={handleAction}>Action</button>;
+}
+```
+
+## Server-Side Utilities
+
+Use server-side utilities in Server Components and API routes.
+
+### trackServerEvent
+
+Track events on the server:
+
+```tsx
+// app/actions.ts
+'use server';
+
+import { trackServerEvent } from '@solute-ai/sdk/nextjs';
+
+export async function createOrder(orderData: any) {
+  // Create order...
+  
+  // Track event
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'Order Created',
+    {
+      order_id: orderData.id,
+      amount: orderData.amount,
+    }
+  );
+}
+```
+
+### getServerFeatureFlag
+
+Get feature flags on the server:
+
+```tsx
+// app/page.tsx
+import { getServerFeatureFlag, isServerFeatureEnabled } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  // Check if feature is enabled
+  const showHero = await isServerFeatureEnabled(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'new-hero-section',
+    false
+  );
+
+  // Get feature flag value
+  const heroConfig = await getServerFeatureFlag(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'hero-config',
+    { theme: 'default' }
+  );
+
+  return (
+    <div>
+      {showHero ? (
+        <NewHeroSection config={heroConfig} />
+      ) : (
+        <OldHeroSection />
+      )}
+    </div>
+  );
+}
+```
+
+### getServerExperimentVariant
+
+Get experiment variant on the server:
+
+```tsx
+// app/pricing/page.tsx
+import { getServerExperimentVariant } from '@solute-ai/sdk/nextjs';
+
+export default async function PricingPage() {
+  const variant = await getServerExperimentVariant(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'pricing-test',
+    'control'
+  );
+
+  return (
+    <div>
+      {variant === 'variant-a' ? (
+        <NewPricingLayout />
+      ) : (
+        <OriginalPricingLayout />
+      )}
+    </div>
+  );
+}
+```
+
+## Middleware
+
+Set up automatic page view tracking with middleware:
+
+```typescript
+// middleware.ts
+import { createSoluteMiddleware } from '@solute-ai/sdk/nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export const middleware = createSoluteMiddleware({
+  apiKey: process.env.SOLUTE_API_KEY!,
+  host: 'https://api.solute.dev',
+  excludePaths: ['/admin/*', '/api/*'],
+  debug: process.env.NODE_ENV === 'development',
+});
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\..*|api).*)',
+  ],
+};
+```
+
+## Environment Variables
+
+Set up environment variables:
+
+<CodeGroup>
+
+```env .env.local
+# Client-side (public)
+NEXT_PUBLIC_SOLUTE_API_KEY=your_api_key_here
+NEXT_PUBLIC_SOLUTE_HOST=https://api.solute.dev
+
+# Server-side (private)
+SOLUTE_API_KEY=your_api_key_here
+SOLUTE_HOST=https://api.solute.dev
+```
+
+</CodeGroup>
+
+<Tip>
+Use `NEXT_PUBLIC_` prefix for client-side environment variables. Server-side variables don't need the prefix.
+</Tip>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use client components for hooks">
+    React hooks can only be used in client components. Make sure to add `'use client'` directive.
+  </Accordion>
+  <Accordion title="Use server utilities in Server Components">
+    Use server-side utilities in Server Components and API routes for better performance.
+  </Accordion>
+  <Accordion title="Separate client and server configs">
+    Use different environment variables for client and server to keep API keys secure.
+  </Accordion>
+  <Accordion title="Wrap provider at root level">
+    Wrap your app with `SoluteProvider` at the root layout level to ensure hooks work everywhere.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Server-Side Tracking"
+    icon="server"
+    href="/guides/server-side-tracking"
+  >
+    Learn about server-side tracking
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/react-hooks"
+  >
+    Complete API reference
+  </Card>
+</CardGroup>
+

@@ -1,0 +1,92 @@
+---
+title: "Identify Endpoint"
+description: "POST /api/identify - Update user traits (optional)"
+---
+
+## POST /api/identify
+
+Updates user traits. This endpoint is optional as identify events can also be sent via `/api/events`.
+
+## Request
+
+### Headers
+
+<ParamField header="Content-Type" type="string" required>
+  `application/json`
+</ParamField>
+
+<ParamField header="X-Api-Key" type="string" required>
+  Your API key
+</ParamField>
+
+### Body
+
+<ParamField body="userId" type="string" required>
+  User ID
+</ParamField>
+
+<ParamField body="anonymousId" type="string">
+  Anonymous ID
+</ParamField>
+
+<ParamField body="traits" type="object">
+  User traits (properties that describe the user)
+</ParamField>
+
+<ParamField body="timestamp" type="string" required>
+  ISO 8601 timestamp
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://api.solute.dev/api/identify \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: your_api_key" \
+  -d '{
+    "userId": "user_123",
+    "traits": {
+      "email": "user@example.com",
+      "plan": "premium",
+      "created_at": "2025-01-01T00:00:00Z"
+    },
+    "timestamp": "2025-01-15T10:30:00Z"
+  }'
+```
+
+## Response
+
+### Success Response
+
+<ParamField body="success" type="boolean" required>
+  `true` if the request was successful
+</ParamField>
+
+<ParamField body="userId" type="string" required>
+  The user ID
+</ParamField>
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "userId": "user_123"
+}
+```
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Events Endpoint"
+    icon="chart-line"
+    href="/backend-api/events"
+  />
+  <Card
+    title="Group Endpoint"
+    icon="users"
+    href="/backend-api/group"
+  />
+</CardGroup>
+

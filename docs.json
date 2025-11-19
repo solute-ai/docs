@@ -1,87 +1,78 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Solute SDK",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#6366F1",
+    "light": "#818CF8",
+    "dark": "#4F46E5"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
               "index",
-              "quickstart",
-              "development"
+              "getting-started/installation",
+              "getting-started/quickstart",
+              "getting-started/configuration"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Features",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "guides/event-tracking",
+              "guides/feature-flags",
+              "guides/user-identification"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Framework Integration",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "guides/nextjs-integration",
+              "guides/server-side-tracking"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Client SDK",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
+              "api-reference/solute-client",
+              "api-reference/event-tracking",
+              "api-reference/feature-flags",
+              "api-reference/user-management"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "React Integration",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/react-hooks"
+            ]
+          },
+          {
+            "group": "Server Integration",
+            "pages": [
+              "api-reference/server-utilities"
+            ]
+          },
+          {
+            "group": "Backend API",
+            "pages": [
+              "backend-api/introduction",
+              "backend-api/authentication",
+              "backend-api/events",
+              "backend-api/feature-flags",
+              "backend-api/identify",
+              "backend-api/group",
+              "backend-api/alias"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -90,33 +81,20 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "GitHub",
+        "href": "https://github.com/solute-ai/solute-sdk"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+    ]
+  },
+  "api": {
+    "baseUrl": "https://api.solute.dev",
+    "auth": {
+      "method": "apiKey",
+      "name": "X-Api-Key"
     }
   },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+  "openapi": "api-reference/openapi.json",
+  "footerSocials": {
+    "github": "https://github.com/solute-ai/solute-sdk"
   }
 }

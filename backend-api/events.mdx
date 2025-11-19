@@ -1,0 +1,184 @@
+---
+title: "Events Endpoint"
+description: "POST /api/events - Receive batched events from the SDK"
+---
+
+## POST /api/events
+
+Receives batched events from the Solute SDK. This is the primary endpoint for event ingestion.
+
+## Request
+
+### Headers
+
+<ParamField header="Content-Type" type="string" required>
+  `application/json`
+</ParamField>
+
+<ParamField header="X-Api-Key" type="string" required>
+  Your API key
+</ParamField>
+
+### Body
+
+<ParamField body="batch" type="Array<Event>" required>
+  Array of events to process. Each event has the following structure:
+</ParamField>
+
+<ParamField body="sentAt" type="string" required>
+  ISO 8601 timestamp when the batch was sent
+</ParamField>
+
+### Event Object
+
+<ParamField body="type" type="'track' | 'identify' | 'page' | 'group' | 'alias'" required>
+  Event type
+</ParamField>
+
+<ParamField body="timestamp" type="string" required>
+  ISO 8601 timestamp
+</ParamField>
+
+<ParamField body="userId" type="string">
+  User ID (if user is identified)
+</ParamField>
+
+<ParamField body="anonymousId" type="string">
+  Anonymous ID
+</ParamField>
+
+<ParamField body="messageId" type="string" required>
+  UUID for deduplication
+</ParamField>
+
+<ParamField body="context" type="object" required>
+  Event context including page info, user agent, screen, locale, library, and session ID
+</ParamField>
+
+<ParamField body="event" type="string">
+  Event name (for 'track' events)
+</ParamField>
+
+<ParamField body="properties" type="object">
+  Event properties (for 'track' events)
+</ParamField>
+
+<ParamField body="traits" type="object">
+  User traits (for 'identify' events)
+</ParamField>
+
+<ParamField body="name" type="string">
+  Page name (for 'page' events)
+</ParamField>
+
+<ParamField body="category" type="string">
+  Page category (for 'page' events)
+</ParamField>
+
+<ParamField body="groupId" type="string">
+  Group ID (for 'group' events)
+</ParamField>
+
+<ParamField body="previousId" type="string">
+  Previous user ID (for 'alias' events)
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://api.solute.dev/api/events \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: your_api_key" \
+  -d '{
+    "batch": [
+      {
+        "type": "track",
+        "event": "Button Clicked",
+        "properties": {
+          "button_id": "cta-signup",
+          "page": "/homepage"
+        },
+        "timestamp": "2025-01-15T10:30:00Z",
+        "userId": "user_123",
+        "anonymousId": "anon_456",
+        "messageId": "msg_789",
+        "context": {
+          "page": {
+            "path": "/homepage",
+            "url": "https://example.com/homepage",
+            "title": "Homepage"
+          },
+          "library": {
+            "name": "@solute-ai/sdk",
+            "version": "0.1.2"
+          },
+          "sessionId": "session_abc"
+        }
+      }
+    ],
+    "sentAt": "2025-01-15T10:30:05Z"
+  }'
+```
+
+## Response
+
+### Success Response
+
+<ParamField body="success" type="boolean" required>
+  `true` if the request was successful
+</ParamField>
+
+<ParamField body="processed" type="number" required>
+  Number of events successfully processed
+</ParamField>
+
+<ParamField body="failed" type="number">
+  Number of events that failed to process
+</ParamField>
+
+<ParamField body="errors" type="Array<{ index: number; error: string }>">
+  Array of errors for failed events
+</ParamField>
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "processed": 1,
+  "failed": 0
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Deduplication">
+    Use the `messageId` field to deduplicate events. Store processed message IDs and reject duplicates.
+  </Accordion>
+  <Accordion title="Batching">
+    Accept batches of up to 100 events. Process them asynchronously and return 200 immediately.
+  </Accordion>
+  <Accordion title="Validation">
+    Validate event schemas before processing. Return validation errors for invalid events.
+  </Accordion>
+  <Accordion title="Async Processing">
+    Process events asynchronously. Don't block the response waiting for event processing to complete.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Feature Flags Endpoint"
+    icon="flask"
+    href="/backend-api/feature-flags"
+  />
+  <Card
+    title="Identify Endpoint"
+    icon="user"
+    href="/backend-api/identify"
+  />
+</CardGroup>
+

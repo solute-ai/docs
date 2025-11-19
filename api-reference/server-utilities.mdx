@@ -1,0 +1,290 @@
+---
+title: "Server Utilities"
+description: "API reference for server-side utilities in Next.js"
+---
+
+## Server Utilities
+
+Server-side utilities for tracking events and using feature flags in Next.js Server Components and API routes.
+
+<Warning>
+These utilities are for server-side use only. They cannot be used in client components.
+</Warning>
+
+## trackServerEvent
+
+Track an event from the server.
+
+<ParamField body="config" type="SoluteConfig" required>
+  SDK configuration with API key and host.
+</ParamField>
+
+<ParamField body="event" type="string" required>
+  Event name.
+</ParamField>
+
+<ParamField body="properties" type="EventProperties">
+  Optional event properties.
+</ParamField>
+
+<ParamField body="context" type="object">
+  Optional context with `userId` and `anonymousId`.
+</ParamField>
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```tsx
+// app/actions.ts
+'use server';
+
+import { trackServerEvent } from '@solute-ai/sdk/nextjs';
+
+export async function createOrder(orderData: any) {
+  // Create order...
+  
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'Order Created',
+    {
+      order_id: orderData.id,
+      amount: orderData.amount,
+    }
+  );
+}
+```
+
+## getServerFeatureFlag
+
+Get a feature flag value on the server.
+
+<ParamField body="config" type="SoluteConfig" required>
+  SDK configuration with API key and host.
+</ParamField>
+
+<ParamField body="key" type="string" required>
+  Feature flag key.
+</ParamField>
+
+<ParamField body="defaultValue" type="T">
+  Default value if flag is not found.
+</ParamField>
+
+### Returns
+
+`Promise<T | undefined>`
+
+### Example
+
+```tsx
+// app/page.tsx
+import { getServerFeatureFlag } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  const heroConfig = await getServerFeatureFlag(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'hero-config',
+    { theme: 'default' }
+  );
+
+  return <HeroSection config={heroConfig} />;
+}
+```
+
+## isServerFeatureEnabled
+
+Check if a feature is enabled on the server.
+
+<ParamField body="config" type="SoluteConfig" required>
+  SDK configuration with API key and host.
+</ParamField>
+
+<ParamField body="key" type="string" required>
+  Feature flag key.
+</ParamField>
+
+<ParamField body="defaultValue" type="boolean">
+  Default value if flag is not found (defaults to `false`).
+</ParamField>
+
+### Returns
+
+`Promise<boolean>`
+
+### Example
+
+```tsx
+// app/page.tsx
+import { isServerFeatureEnabled } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  const showHero = await isServerFeatureEnabled(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'new-hero-section',
+    false
+  );
+
+  return (
+    <div>
+      {showHero ? <NewHeroSection /> : <OldHeroSection />}
+    </div>
+  );
+}
+```
+
+## getServerExperimentVariant
+
+Get an experiment variant on the server.
+
+<ParamField body="config" type="SoluteConfig" required>
+  SDK configuration with API key and host.
+</ParamField>
+
+<ParamField body="key" type="string" required>
+  Experiment key.
+</ParamField>
+
+<ParamField body="defaultValue" type="string">
+  Default variant if experiment is not found.
+</ParamField>
+
+### Returns
+
+`Promise<string | undefined>`
+
+### Example
+
+```tsx
+// app/pricing/page.tsx
+import { getServerExperimentVariant } from '@solute-ai/sdk/nextjs';
+
+export default async function PricingPage() {
+  const variant = await getServerExperimentVariant(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'pricing-test',
+    'control'
+  );
+
+  return (
+    <div>
+      {variant === 'variant-a' ? (
+        <NewPricingLayout />
+      ) : (
+        <OriginalPricingLayout />
+      )}
+    </div>
+  );
+}
+```
+
+## getUserIdFromCookies
+
+Get the user ID from cookies (server-side).
+
+### Returns
+
+`Promise<string | undefined>`
+
+### Example
+
+```tsx
+// app/profile/page.tsx
+import { getUserIdFromCookies } from '@solute-ai/sdk/nextjs';
+
+export default async function ProfilePage() {
+  const userId = await getUserIdFromCookies();
+
+  if (!userId) {
+    redirect('/login');
+  }
+
+  return <div>Profile for {userId}</div>;
+}
+```
+
+## getAnonymousIdFromCookies
+
+Get the anonymous ID from cookies (server-side).
+
+### Returns
+
+`Promise<string | undefined>`
+
+### Example
+
+```tsx
+// app/page.tsx
+import { getAnonymousIdFromCookies } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  const anonymousId = await getAnonymousIdFromCookies();
+  
+  return <div>Anonymous ID: {anonymousId}</div>;
+}
+```
+
+## getRequestContext
+
+Get request context (user agent, IP, referer) from headers.
+
+### Returns
+
+`Promise<{ userAgent?: string; ip?: string; referer?: string }>`
+
+### Example
+
+```tsx
+// app/api/track/route.ts
+import { getRequestContext, trackServerEvent } from '@solute-ai/sdk/nextjs';
+
+export async function POST(request: Request) {
+  const context = await getRequestContext();
+  const data = await request.json();
+
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    data.event,
+    data.properties,
+    {
+      userAgent: context.userAgent,
+      ip: context.ip,
+    }
+  );
+
+  return Response.json({ success: true });
+}
+```
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Server-Side Tracking Guide"
+    icon="book"
+    href="/guides/server-side-tracking"
+  />
+  <Card
+    title="React Hooks"
+    icon="react"
+    href="/api-reference/react-hooks"
+  />
+</CardGroup>
+

@@ -1,0 +1,270 @@
+---
+title: "Feature Flags & A/B Testing"
+description: "Use feature flags and run A/B tests with the Solute SDK"
+---
+
+## Feature Flags & A/B Testing
+
+The Solute SDK provides powerful feature flag and A/B testing capabilities. Control feature rollouts, run experiments, and make data-driven decisions.
+
+## Check Feature Flags
+
+### Simple Boolean Flags
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  host: 'https://api.solute.dev',
+});
+
+// Check if a feature is enabled
+if (solute.isFeatureEnabled('new-checkout-flow')) {
+  // Show new checkout flow
+} else {
+  // Show old checkout flow
+}
+```
+
+### Get Feature Flag Value
+
+```typescript
+// Get the flag value (can be boolean, string, number, or object)
+const flagValue = solute.getFeatureFlag('new-checkout-flow');
+
+if (flagValue === true) {
+  // Feature is enabled
+}
+
+// With default value
+const flagValue = solute.getFeatureFlag('new-checkout-flow', {
+  defaultValue: false,
+});
+```
+
+### Typed Feature Flags
+
+```typescript
+// Get typed flag value
+const config = solute.getFeatureFlag<{
+  theme: string;
+  layout: string;
+}>('checkout-config', {
+  defaultValue: { theme: 'light', layout: 'standard' },
+});
+
+// Use the config
+if (config) {
+  console.log(config.theme); // TypeScript knows the type
+}
+```
+
+## A/B Testing
+
+### Get Experiment Variant
+
+```typescript
+// Get the variant for an A/B test
+const variant = solute.getExperimentVariant('pricing-test');
+
+if (variant === 'variant-a') {
+  // Show variant A
+} else if (variant === 'variant-b') {
+  // Show variant B
+} else {
+  // Show control/default
+}
+
+// With default value
+const variant = solute.getExperimentVariant('pricing-test', {
+  defaultValue: 'control',
+});
+```
+
+### Example: Pricing Page A/B Test
+
+```typescript
+const variant = solute.getExperimentVariant('pricing-page-test');
+
+switch (variant) {
+  case 'variant-a':
+    // Show new pricing layout
+    renderNewPricingLayout();
+    break;
+  case 'variant-b':
+    // Show alternative pricing layout
+    renderAlternativePricingLayout();
+    break;
+  default:
+    // Show original pricing layout
+    renderOriginalPricingLayout();
+}
+```
+
+## Get All Flags
+
+```typescript
+// Get all feature flags at once
+const allFlags = solute.getAllFlags();
+
+// Access individual flags
+if (allFlags['new-checkout-flow']?.enabled) {
+  // Feature is enabled
+}
+
+// Get experiment variant from all flags
+const experiment = allFlags['pricing-test'];
+if (experiment?.variant === 'variant-a') {
+  // Show variant A
+}
+```
+
+## Reload Feature Flags
+
+Manually refresh feature flags from the server:
+
+```typescript
+// Reload all flags
+await solute.reloadFeatureFlags();
+
+// Reload with updated user properties (for targeting)
+await solute.reloadFeatureFlags({
+  plan: 'premium',
+  country: 'US',
+});
+```
+
+<Tip>
+Feature flags are automatically refreshed based on your configuration. You typically don't need to manually reload them.
+</Tip>
+
+## Next.js Integration
+
+### Using Hooks
+
+```tsx
+'use client';
+
+import { useFeatureEnabled, useExperiment, useFeatureFlag } from '@solute-ai/sdk/nextjs';
+
+export function CheckoutButton() {
+  const showNewCheckout = useFeatureEnabled('new-checkout-flow');
+  const pricingVariant = useExperiment('pricing-test');
+  const config = useFeatureFlag<{ theme: string }>('checkout-config');
+
+  return (
+    <div>
+      {showNewCheckout ? (
+        <NewCheckoutButton theme={config?.theme} />
+      ) : (
+        <OldCheckoutButton />
+      )}
+      
+      {pricingVariant === 'variant-a' && (
+        <SpecialOffer />
+      )}
+    </div>
+  );
+}
+```
+
+### Server-Side Feature Flags
+
+```tsx
+// app/page.tsx
+import { getServerFeatureFlag, isServerFeatureEnabled } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  // Check feature flag on server
+  const showHero = await isServerFeatureEnabled(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'new-hero-section',
+    false
+  );
+
+  // Get feature flag value
+  const heroConfig = await getServerFeatureFlag(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'hero-config',
+    { theme: 'default' }
+  );
+
+  return (
+    <div>
+      {showHero ? (
+        <NewHeroSection config={heroConfig} />
+      ) : (
+        <OldHeroSection />
+      )}
+    </div>
+  );
+}
+```
+
+## Feature Flag Targeting
+
+Feature flags can be targeted based on user properties. The SDK automatically includes user properties when fetching flags:
+
+```typescript
+// Identify user with properties
+solute.identify('user_123', {
+  plan: 'premium',
+  country: 'US',
+  beta_tester: true,
+});
+
+// Flags will be evaluated based on these properties
+const flag = solute.getFeatureFlag('premium-feature');
+```
+
+## Exposure Tracking
+
+The SDK automatically tracks exposure events when feature flags are evaluated. This helps you measure the impact of your experiments.
+
+<Note>
+Exposure tracking is enabled by default. You can disable it in the configuration if needed.
+</Note>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use descriptive flag names">
+    Use clear, descriptive names like `new-checkout-flow` or `pricing-page-v2`. Avoid generic names like `flag1` or `test`.
+  </Accordion>
+  <Accordion title="Always provide default values">
+    Provide sensible defaults for feature flags to ensure your app works even if flags fail to load.
+  </Accordion>
+  <Accordion title="Test both variants">
+    Make sure both the enabled and disabled states of your feature work correctly.
+  </Accordion>
+  <Accordion title="Monitor exposure events">
+    Track exposure events to understand how many users are seeing each variant of your experiments.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Event Tracking"
+    icon="chart-line"
+    href="/guides/event-tracking"
+  >
+    Learn about tracking events
+  </Card>
+  <Card
+    title="Next.js Integration"
+    icon="react"
+    href="/guides/nextjs-integration"
+  >
+    Deep dive into Next.js integration
+  </Card>
+</CardGroup>
+

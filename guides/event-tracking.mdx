@@ -1,0 +1,229 @@
+---
+title: "Event Tracking"
+description: "Track custom events, page views, and user actions"
+---
+
+## Event Tracking
+
+The Solute SDK provides comprehensive event tracking capabilities. Track custom events, page views, user identification, and more.
+
+## Track Custom Events
+
+Track any custom event with properties:
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  host: 'https://api.solute.dev',
+});
+
+// Track a simple event
+solute.track('Button Clicked');
+
+// Track an event with properties
+solute.track('Button Clicked', {
+  button_id: 'signup-cta',
+  page: '/homepage',
+  position: 'header',
+  color: 'blue',
+});
+```
+
+## Identify Users
+
+Identify users to associate events with specific users:
+
+```typescript
+// Identify a user with traits
+solute.identify('user_123', {
+  email: 'user@example.com',
+  name: 'John Doe',
+  plan: 'premium',
+  created_at: '2025-01-01T00:00:00Z',
+});
+
+// Identify without traits (just set user ID)
+solute.identify('user_123');
+```
+
+<Tip>
+Call `identify()` as soon as you know the user's ID. All subsequent events will be associated with this user.
+</Tip>
+
+## Track Page Views
+
+Track page views automatically or manually:
+
+```typescript
+// Automatic page view tracking (enabled by default)
+// The SDK automatically tracks page views on route changes
+
+// Manual page view tracking
+solute.page('/pricing');
+
+// Page view with properties
+solute.page('/pricing', {
+  category: 'Marketing',
+  title: 'Pricing Page',
+});
+
+// Page view with name and category
+solute.page('Pricing Page', {
+  plan: 'premium',
+}, 'Marketing');
+```
+
+## Track Groups
+
+Associate users with groups or organizations:
+
+```typescript
+// Associate user with a group
+solute.group('company_123', {
+  name: 'Acme Corp',
+  plan: 'enterprise',
+  employees: 50,
+});
+```
+
+## Alias User Identities
+
+Merge anonymous and identified user identities:
+
+```typescript
+// When a user signs up, alias their anonymous ID with their user ID
+solute.alias('user_123', 'anonymous_456');
+```
+
+## Reset User
+
+Reset the user identity (useful on logout):
+
+```typescript
+// Reset user and start a new session
+solute.reset();
+```
+
+## Flush Events
+
+Force immediate sending of queued events:
+
+```typescript
+// Flush all queued events immediately
+await solute.flush();
+```
+
+<Tip>
+Events are automatically flushed based on your queue configuration. You typically don't need to call `flush()` manually.
+</Tip>
+
+## Event Properties
+
+Event properties can include any JSON-serializable data:
+
+```typescript
+solute.track('Purchase Completed', {
+  // Strings
+  product_id: 'prod_123',
+  currency: 'USD',
+  
+  // Numbers
+  price: 99.99,
+  quantity: 2,
+  
+  // Booleans
+  is_premium: true,
+  
+  // Arrays
+  tags: ['electronics', 'gadgets'],
+  
+  // Objects
+  metadata: {
+    source: 'web',
+    campaign: 'summer-sale',
+  },
+  
+  // Dates (will be serialized to ISO strings)
+  purchased_at: new Date(),
+});
+```
+
+## Automatic Context
+
+The SDK automatically enriches all events with context:
+
+- **Page information**: URL, path, referrer, title
+- **User agent**: Browser and device information
+- **Screen**: Screen dimensions and density
+- **Locale**: User's locale and timezone
+- **Session**: Session ID
+- **Library**: SDK name and version
+
+## Next.js Integration
+
+In Next.js, use hooks for event tracking:
+
+```tsx
+'use client';
+
+import { useTrack, useIdentify } from '@solute-ai/sdk/nextjs';
+
+export function SignupButton() {
+  const track = useTrack();
+  const identify = useIdentify();
+
+  const handleSignup = async () => {
+    // Identify user after signup
+    identify('user_123', {
+      email: 'user@example.com',
+    });
+
+    // Track signup event
+    track('User Signed Up', {
+      method: 'email',
+      plan: 'free',
+    });
+  };
+
+  return <button onClick={handleSignup}>Sign Up</button>;
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use descriptive event names">
+    Use clear, consistent event names like `Button Clicked`, `Purchase Completed`, or `User Signed Up`. Avoid generic names like `click` or `action`.
+  </Accordion>
+  <Accordion title="Include relevant properties">
+    Add properties that help you understand the context of the event. Include IDs, categories, and any relevant metadata.
+  </Accordion>
+  <Accordion title="Identify users early">
+    Call `identify()` as soon as you know the user's ID to associate all events with the user.
+  </Accordion>
+  <Accordion title="Don't track PII unnecessarily">
+    Be mindful of privacy. Only track personally identifiable information (PII) if necessary and with user consent.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Feature Flags"
+    icon="flask"
+    href="/guides/feature-flags"
+  >
+    Learn about feature flags and A/B testing
+  </Card>
+  <Card
+    title="Next.js Integration"
+    icon="react"
+    href="/guides/nextjs-integration"
+  >
+    Deep dive into Next.js integration
+  </Card>
+</CardGroup>
+

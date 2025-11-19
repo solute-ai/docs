@@ -1,97 +1,102 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Solute SDK"
+description: "Event tracking and A/B testing SDK for Solute - AI-powered product analytics platform"
 ---
 
-## Setting up
+## Welcome to Solute SDK
 
-Get your documentation site up and running in minutes.
+Solute SDK is a lightweight, TypeScript-first analytics SDK that tracks user events and enables A/B testing. Similar to PostHog or Amplitude, but designed specifically for the Solute platform.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Get Started"
+    icon="rocket"
+    href="/getting-started/installation"
   >
-    Edit your docs locally and preview them in real time.
+    Install and set up the SDK in minutes
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Quick Start"
+    icon="bolt"
+    href="/getting-started/quickstart"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Start tracking events and using feature flags
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
+    title="Next.js Integration"
+    icon="react"
+    href="/guides/nextjs-integration"
   >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+    First-class Next.js App Router support
   </Card>
   <Card
-    title="Code samples"
+    title="API Reference"
     icon="code"
-    href="/essentials/code"
+    href="/api-reference/solute-client"
   >
-    Add sample code to demonstrate how to use your product.
+    Complete API documentation
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Need inspiration?
+## Features
+
+<AccordionGroup>
+  <Accordion title="Event Tracking" icon="chart-line">
+    Track custom events, page views, and user actions with automatic context enrichment. Queue events when offline and sync when back online.
+  </Accordion>
+  <Accordion title="A/B Testing" icon="flask">
+    Run experiments with feature flags and variants. Consistent user assignment and percentage-based rollouts.
+  </Accordion>
+  <Accordion title="User Identification" icon="user">
+    Identify and track users across sessions with support for anonymous and identified users.
+  </Accordion>
+  <Accordion title="Type-Safe" icon="shield-check">
+    Full TypeScript support with comprehensive type definitions for all SDK methods.
+  </Accordion>
+  <Accordion title="Lightweight" icon="gauge">
+    Less than 20KB gzipped. Optimized for performance with minimal bundle size impact.
+  </Accordion>
+  <Accordion title="Framework Support" icon="puzzle-piece">
+    Works with vanilla JS, React, Next.js, and more. First-class Next.js App Router integration.
+  </Accordion>
+</AccordionGroup>
+
+## Quick Example
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  host: 'https://api.solute.dev',
+});
+
+// Track events
+solute.track('Button Clicked', {
+  button_id: 'signup-cta',
+  page: '/homepage',
+});
+
+// Check feature flags
+if (solute.isFeatureEnabled('new-checkout')) {
+  // Show new checkout flow
+}
+```
+
+## Installation
+
+```bash
+npm install @solute-ai/sdk
+# or
+yarn add @solute-ai/sdk
+# or
+pnpm add @solute-ai/sdk
+```
 
 <Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
+  title="Ready to get started?"
+  icon="arrow-right"
+  href="/getting-started/installation"
 >
-  Browse our showcase of exceptional documentation sites.
+  Follow our installation guide to set up the SDK in your project.
 </Card>

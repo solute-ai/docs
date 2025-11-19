@@ -1,0 +1,57 @@
+---
+title: "Authentication"
+description: "How to authenticate with the Solute backend API"
+---
+
+## Authentication
+
+All API requests must be authenticated using an API key.
+
+## API Key Header
+
+Include your API key in the `X-Api-Key` header for all requests:
+
+```bash
+curl -X POST https://api.solute.dev/api/events \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: your_api_key_here" \
+  -d '{...}'
+```
+
+## Getting Your API Key
+
+Get your API key from your Solute dashboard. The API key is associated with your lab/organization.
+
+<Warning>
+Keep your API key secure. Never expose it in client-side code or commit it to version control.
+</Warning>
+
+## Invalid API Key
+
+If the API key is missing or invalid, the server should return:
+
+```json
+{
+  "error": {
+    "code": "INVALID_API_KEY",
+    "message": "Invalid or missing API key"
+  },
+  "statusCode": 401
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Events Endpoint"
+    icon="chart-line"
+    href="/backend-api/events"
+  />
+  <Card
+    title="Feature Flags Endpoint"
+    icon="flask"
+    href="/backend-api/feature-flags"
+  />
+</CardGroup>
+

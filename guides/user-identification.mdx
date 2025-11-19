@@ -1,0 +1,217 @@
+---
+title: "User Identification"
+description: "Identify users and manage sessions"
+---
+
+## User Identification
+
+The Solute SDK automatically manages user identification and sessions. Learn how to identify users and work with sessions.
+
+## Anonymous vs Identified Users
+
+The SDK supports two types of user identification:
+
+- **Anonymous users**: Automatically assigned an anonymous ID. Used before user login.
+- **Identified users**: Assigned a user ID when you call `identify()`. Used after user login.
+
+## Identify Users
+
+Identify a user when they log in or sign up:
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  host: 'https://api.solute.dev',
+});
+
+// Identify user with traits
+solute.identify('user_123', {
+  email: 'user@example.com',
+  name: 'John Doe',
+  plan: 'premium',
+  created_at: '2025-01-01T00:00:00Z',
+});
+```
+
+<Tip>
+Call `identify()` as soon as you know the user's ID. All subsequent events will be associated with this user.
+</Tip>
+
+## Get User Information
+
+```typescript
+// Get current user ID
+const userId = solute.getUserId(); // 'user_123' or undefined
+
+// Get anonymous ID (always available)
+const anonymousId = solute.getAnonymousId(); // 'anon_456'
+
+// Get session ID
+const sessionId = solute.getSessionId(); // 'session_789'
+```
+
+## Alias Anonymous to Identified
+
+When a user signs up, merge their anonymous identity with their new user ID:
+
+```typescript
+// Before signup (anonymous)
+const anonymousId = solute.getAnonymousId(); // 'anon_456'
+
+// User signs up
+solute.identify('user_123', {
+  email: 'user@example.com',
+});
+
+// Alias the anonymous ID with the user ID
+solute.alias('user_123', anonymousId);
+```
+
+This ensures all events from before signup are associated with the user.
+
+## Reset User
+
+Reset user identity on logout:
+
+```typescript
+// Reset user and start a new session
+solute.reset();
+```
+
+After `reset()`, the SDK will:
+- Clear the user ID
+- Generate a new anonymous ID
+- Start a new session
+- Clear user traits
+
+## Session Management
+
+Sessions are automatically managed by the SDK:
+
+- **Session creation**: A new session starts when the SDK initializes
+- **Session timeout**: Sessions expire after 30 minutes of inactivity (configurable)
+- **Session ID**: Each session has a unique ID that's included in all events
+
+### Configure Session Timeout
+
+```typescript
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  sessionTimeout: 60 * 60 * 1000, // 1 hour (in milliseconds)
+});
+```
+
+## User Traits
+
+Store user properties as traits:
+
+```typescript
+// Set initial traits
+solute.identify('user_123', {
+  email: 'user@example.com',
+  name: 'John Doe',
+  plan: 'premium',
+});
+
+// Update traits later
+solute.identify('user_123', {
+  plan: 'enterprise', // Update plan
+  company: 'Acme Corp', // Add new trait
+});
+```
+
+Traits are included in all subsequent events and can be used for feature flag targeting.
+
+## Next.js Integration
+
+### Client Components
+
+```tsx
+'use client';
+
+import { useIdentify, useUser } from '@solute-ai/sdk/nextjs';
+
+export function UserProfile() {
+  const identify = useIdentify();
+  const { userId, anonymousId, sessionId } = useUser();
+
+  const handleLogin = async (userData: { id: string; email: string }) => {
+    // Identify user after login
+    identify(userData.id, {
+      email: userData.email,
+    });
+  };
+
+  return (
+    <div>
+      {userId ? (
+        <p>Logged in as: {userId}</p>
+      ) : (
+        <p>Anonymous ID: {anonymousId}</p>
+      )}
+      <p>Session: {sessionId}</p>
+    </div>
+  );
+}
+```
+
+### Server Components
+
+```tsx
+// app/profile/page.tsx
+import { getUserIdFromCookies, getAnonymousIdFromCookies } from '@solute-ai/sdk/nextjs';
+
+export default async function ProfilePage() {
+  const userId = await getUserIdFromCookies();
+  const anonymousId = await getAnonymousIdFromCookies();
+
+  return (
+    <div>
+      {userId ? (
+        <p>User ID: {userId}</p>
+      ) : (
+        <p>Anonymous ID: {anonymousId}</p>
+      )}
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Identify early">
+    Call `identify()` as soon as you know the user's ID to associate all events with the user.
+  </Accordion>
+  <Accordion title="Alias on signup">
+    Always alias the anonymous ID with the user ID when a user signs up to preserve event history.
+  </Accordion>
+  <Accordion title="Reset on logout">
+    Call `reset()` when users log out to start a fresh session for the next user.
+  </Accordion>
+  <Accordion title="Update traits regularly">
+    Keep user traits up to date by calling `identify()` when user properties change.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Event Tracking"
+    icon="chart-line"
+    href="/guides/event-tracking"
+  >
+    Learn about tracking events
+  </Card>
+  <Card
+    title="Next.js Integration"
+    icon="react"
+    href="/guides/nextjs-integration"
+  >
+    Deep dive into Next.js integration
+  </Card>
+</CardGroup>
+

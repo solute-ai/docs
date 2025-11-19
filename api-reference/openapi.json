@@ -1,54 +1,408 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "Solute SDK Backend API",
+    "description": "Backend API endpoints for the Solute SDK. These endpoints must be implemented by your backend to work with the SDK.",
+    "version": "0.1.2",
+    "contact": {
+      "name": "Solute Support",
+      "url": "https://github.com/solute-ai/solute-sdk"
+    }
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api.solute.dev",
+      "description": "Production server"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key",
+        "description": "API key for authentication"
+      }
+    },
+    "schemas": {
+      "Event": {
+        "type": "object",
+        "required": ["type", "timestamp", "messageId", "context"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["track", "identify", "page", "group", "alias"],
+            "description": "Event type"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID (if user is identified)"
+          },
+          "anonymousId": {
+            "type": "string",
+            "description": "Anonymous ID"
+          },
+          "messageId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID for deduplication"
+          },
+          "context": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "object",
+                "properties": {
+                  "path": { "type": "string" },
+                  "referrer": { "type": "string" },
+                  "search": { "type": "string" },
+                  "title": { "type": "string" },
+                  "url": { "type": "string" }
+                }
+              },
+              "userAgent": { "type": "string" },
+              "screen": {
+                "type": "object",
+                "properties": {
+                  "width": { "type": "number" },
+                  "height": { "type": "number" },
+                  "density": { "type": "number" }
+                }
+              },
+              "locale": { "type": "string" },
+              "timezone": { "type": "string" },
+              "library": {
+                "type": "object",
+                "required": ["name", "version"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "version": { "type": "string" }
+                }
+              },
+              "sessionId": { "type": "string" }
+            },
+            "required": ["library"]
+          },
+          "event": {
+            "type": "string",
+            "description": "Event name (for 'track' events)"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Event properties (for 'track' events)"
+          },
+          "traits": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "User traits (for 'identify' events)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Page name (for 'page' events)"
+          },
+          "category": {
+            "type": "string",
+            "description": "Page category (for 'page' events)"
+          },
+          "groupId": {
+            "type": "string",
+            "description": "Group ID (for 'group' events)"
+          },
+          "previousId": {
+            "type": "string",
+            "description": "Previous user ID (for 'alias' events)"
+          }
+        }
+      },
+      "EventsRequest": {
+        "type": "object",
+        "required": ["batch", "sentAt"],
+        "properties": {
+          "batch": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "description": "Array of events to process"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the batch was sent"
+          }
+        }
+      },
+      "EventsResponse": {
+        "type": "object",
+        "required": ["success", "processed"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the request was successful"
+          },
+          "processed": {
+            "type": "number",
+            "description": "Number of events successfully processed"
+          },
+          "failed": {
+            "type": "number",
+            "description": "Number of events that failed to process"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": { "type": "number" },
+                "error": { "type": "string" }
+              }
+            },
+            "description": "Array of errors for failed events"
+          }
+        }
+      },
+      "Flag": {
+        "type": "object",
+        "required": ["key", "enabled"],
+        "properties": {
+          "key": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "variant": { "type": "string" },
+          "value": {
+            "oneOf": [
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "object" }
+            ]
+          },
+          "rolloutPercentage": { "type": "number", "minimum": 0, "maximum": 100 }
+        }
+      },
+      "ExperimentVariant": {
+        "type": "object",
+        "required": ["key", "value"],
+        "properties": {
+          "key": { "type": "string" },
+          "value": {
+            "oneOf": [
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "object" }
+            ]
+          },
+          "payload": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "Experiment": {
+        "type": "object",
+        "required": ["key", "name", "variants", "status"],
+        "properties": {
+          "key": { "type": "string" },
+          "name": { "type": "string" },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExperimentVariant"
+            }
+          },
+          "assignedVariant": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "running", "paused", "completed"]
+          }
+        }
+      },
+      "FeatureFlagsResponse": {
+        "type": "object",
+        "required": ["flags", "timestamp"],
+        "properties": {
+          "flags": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Flag"
+            }
+          },
+          "experiments": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Experiment"
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp"
+          }
+        }
+      },
+      "IdentifyRequest": {
+        "type": "object",
+        "required": ["userId", "timestamp"],
+        "properties": {
+          "userId": { "type": "string" },
+          "anonymousId": { "type": "string" },
+          "traits": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IdentifyResponse": {
+        "type": "object",
+        "required": ["success", "userId"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "userId": { "type": "string" }
+        }
+      },
+      "GroupRequest": {
+        "type": "object",
+        "required": ["groupId", "timestamp"],
+        "properties": {
+          "groupId": { "type": "string" },
+          "userId": { "type": "string" },
+          "anonymousId": { "type": "string" },
+          "traits": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GroupResponse": {
+        "type": "object",
+        "required": ["success", "groupId"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "groupId": { "type": "string" }
+        }
+      },
+      "AliasRequest": {
+        "type": "object",
+        "required": ["userId", "previousId", "timestamp"],
+        "properties": {
+          "userId": { "type": "string" },
+          "previousId": { "type": "string" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AliasResponse": {
+        "type": "object",
+        "required": ["success", "userId", "previousId"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "userId": { "type": "string" },
+          "previousId": { "type": "string" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error", "statusCode"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": ["INVALID_API_KEY", "VALIDATION_ERROR", "RATE_LIMIT_EXCEEDED", "INTERNAL_ERROR", "NOT_FOUND"]
+              },
+              "message": { "type": "string" },
+              "details": { "type": "object", "additionalProperties": true }
+            }
+          },
+          "statusCode": { "type": "number" }
+        }
+      }
+    }
+  },
   "security": [
     {
-      "bearerAuth": []
+      "apiKeyAuth": []
     }
   ],
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+    "/api/events": {
+      "post": {
+        "summary": "Ingest Events",
+        "description": "Receives batched events from the SDK",
+        "operationId": "ingestEvents",
+        "tags": ["Events"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventsRequest"
+              },
+              "example": {
+                "batch": [
+                  {
+                    "type": "track",
+                    "event": "Button Clicked",
+                    "properties": {
+                      "button_id": "cta-signup",
+                      "page": "/homepage"
+                    },
+                    "timestamp": "2025-01-15T10:30:00Z",
+                    "userId": "user_123",
+                    "anonymousId": "anon_456",
+                    "messageId": "msg_789",
+                    "context": {
+                      "page": {
+                        "path": "/homepage",
+                        "url": "https://example.com/homepage",
+                        "title": "Homepage"
+                      },
+                      "library": {
+                        "name": "@solute-ai/sdk",
+                        "version": "0.1.2"
+                      },
+                      "sessionId": "session_abc"
+                    }
                   }
+                ],
+                "sentAt": "2025-01-15T10:30:05Z"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Events processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                },
+                "example": {
+                  "success": true,
+                  "processed": 1,
+                  "failed": 0
                 }
               }
             }
           },
           "400": {
-            "description": "Unexpected error",
+            "description": "Validation error",
             "content": {
               "application/json": {
                 "schema": {
@@ -56,35 +410,19 @@
                 }
               }
             }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
           },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
+          "401": {
+            "description": "Invalid API key",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
           },
-          "400": {
-            "description": "unexpected error",
+          "429": {
+            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -96,28 +434,78 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/api/feature-flags": {
+      "get": {
+        "summary": "Get Feature Flags",
+        "description": "Fetches feature flags and experiments for a user",
+        "operationId": "getFeatureFlags",
+        "tags": ["Feature Flags"],
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
+            "name": "userId",
+            "in": "query",
+            "description": "The user's ID (if user is identified)",
+            "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
+            }
+          },
+          {
+            "name": "anonymousId",
+            "in": "query",
+            "description": "The anonymous ID",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userProperties",
+            "in": "query",
+            "description": "JSON-encoded user properties for targeting",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
+          "200": {
+            "description": "Feature flags retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureFlagsResponse"
+                },
+                "example": {
+                  "flags": {
+                    "new-checkout-flow": {
+                      "key": "new-checkout-flow",
+                      "enabled": true,
+                      "variant": "variant-b",
+                      "value": true,
+                      "rolloutPercentage": 50
+                    }
+                  },
+                  "experiments": {
+                    "pricing-test": {
+                      "key": "pricing-test",
+                      "name": "Pricing Page A/B Test",
+                      "variants": [
+                        { "key": "control", "value": "original" },
+                        { "key": "variant-a", "value": "new-design" }
+                      ],
+                      "assignedVariant": "variant-a",
+                      "status": "running"
+                    }
+                  },
+                  "timestamp": "2025-01-15T10:30:00Z"
+                }
+              }
+            }
           },
-          "400": {
-            "description": "unexpected error",
+          "401": {
+            "description": "Invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -128,89 +516,147 @@
           }
         }
       }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
+    },
+    "/api/identify": {
       "post": {
-        "description": "Information about a new plant added to the store",
+        "summary": "Identify User",
+        "description": "Updates user traits. This is optional as identify events can also be sent via /api/events",
+        "operationId": "identifyUser",
+        "tags": ["Users"],
         "requestBody": {
-          "description": "Plant added to the store",
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/IdentifyRequest"
+              },
+              "example": {
+                "userId": "user_123",
+                "traits": {
+                  "email": "user@example.com",
+                  "plan": "premium"
+                },
+                "timestamp": "2025-01-15T10:30:00Z"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
+            "description": "User identified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentifyResponse"
+                }
               }
             }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
           },
-          "message": {
-            "type": "string"
+          "401": {
+            "description": "Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
     },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+    "/api/group": {
+      "post": {
+        "summary": "Associate User with Group",
+        "description": "Associates users with a group or organization",
+        "operationId": "associateGroup",
+        "tags": ["Groups"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupRequest"
+              },
+              "example": {
+                "groupId": "company_123",
+                "userId": "user_123",
+                "traits": {
+                  "name": "Acme Corp",
+                  "plan": "enterprise"
+                },
+                "timestamp": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Group associated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alias": {
+      "post": {
+        "summary": "Alias User Identities",
+        "description": "Merges user identities",
+        "operationId": "aliasUser",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AliasRequest"
+              },
+              "example": {
+                "userId": "user_123",
+                "previousId": "anon_456",
+                "timestamp": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Identities aliased successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AliasResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

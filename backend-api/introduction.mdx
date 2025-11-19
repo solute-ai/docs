@@ -1,0 +1,91 @@
+---
+title: "Backend API Introduction"
+description: "Overview of the Solute SDK backend API"
+---
+
+## Backend API
+
+The Solute SDK requires a backend API to receive events and serve feature flags. This section documents the API endpoints that your backend must implement.
+
+## Base URL
+
+```
+https://api.solute.dev
+```
+
+## Authentication
+
+All requests must include the API key in the `X-Api-Key` header:
+
+```
+X-Api-Key: your_api_key_here
+```
+
+## Required Endpoints
+
+Your backend must implement at least these two endpoints:
+
+- **POST /api/events** - Receive batched events from the SDK
+- **GET /api/feature-flags** - Serve feature flags for a user
+
+## Optional Endpoints
+
+These endpoints are optional but recommended:
+
+- **POST /api/identify** - Update user traits (can also be sent via `/api/events`)
+- **POST /api/group** - Associate users with groups
+- **POST /api/alias** - Merge user identities
+
+## Rate Limiting
+
+Recommended rate limits:
+
+- Event ingestion: 1000 requests/minute per API key
+- Feature flags: 100 requests/minute per API key
+- Identify/Group/Alias: 500 requests/minute per API key
+
+Return `429 Too Many Requests` when limits are exceeded.
+
+## Error Responses
+
+All endpoints should return errors in this format:
+
+```json
+{
+  "error": {
+    "code": "INVALID_API_KEY",
+    "message": "Invalid or missing API key",
+    "details": {}
+  },
+  "statusCode": 401
+}
+```
+
+### Common Error Codes
+
+- `INVALID_API_KEY` - Invalid or missing API key
+- `VALIDATION_ERROR` - Request body validation failed
+- `RATE_LIMIT_EXCEEDED` - Too many requests
+- `INTERNAL_ERROR` - Server error
+- `NOT_FOUND` - Resource not found
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Authentication"
+    icon="key"
+    href="/backend-api/authentication"
+  />
+  <Card
+    title="Events Endpoint"
+    icon="chart-line"
+    href="/backend-api/events"
+  />
+  <Card
+    title="Feature Flags Endpoint"
+    icon="flask"
+    href="/backend-api/feature-flags"
+  />
+</CardGroup>
+

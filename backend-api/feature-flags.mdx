@@ -1,0 +1,196 @@
+---
+title: "Feature Flags Endpoint"
+description: "GET /api/feature-flags - Serve feature flags for a user"
+---
+
+## GET /api/feature-flags
+
+Fetches feature flags and experiments for a user. This endpoint is called by the SDK to get the current state of feature flags.
+
+## Request
+
+### Headers
+
+<ParamField header="X-Api-Key" type="string" required>
+  Your API key
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="userId" type="string">
+  The user's ID (if user is identified)
+</ParamField>
+
+<ParamField query="anonymousId" type="string">
+  The anonymous ID
+</ParamField>
+
+<ParamField query="userProperties" type="string">
+  JSON-encoded user properties for targeting (optional)
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.solute.dev/api/feature-flags?userId=user_123&anonymousId=anon_456" \
+  -H "X-Api-Key: your_api_key"
+```
+
+## Response
+
+### Success Response
+
+<ParamField body="flags" type="object" required>
+  Object mapping flag keys to flag objects
+</ParamField>
+
+<ParamField body="experiments" type="object">
+  Object mapping experiment keys to experiment objects
+</ParamField>
+
+<ParamField body="timestamp" type="string" required>
+  ISO 8601 timestamp
+</ParamField>
+
+### Flag Object
+
+<ParamField body="key" type="string" required>
+  Flag key
+</ParamField>
+
+<ParamField body="enabled" type="boolean" required>
+  Whether the flag is enabled
+</ParamField>
+
+<ParamField body="variant" type="string">
+  Assigned variant (for experiments)
+</ParamField>
+
+<ParamField body="value" type="boolean | string | number | object">
+  Flag value
+</ParamField>
+
+<ParamField body="rolloutPercentage" type="number">
+  Rollout percentage (0-100)
+</ParamField>
+
+### Experiment Object
+
+<ParamField body="key" type="string" required>
+  Experiment key
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Experiment name
+</ParamField>
+
+<ParamField body="variants" type="Array<{ key: string; value: any }>" required>
+  Available variants
+</ParamField>
+
+<ParamField body="assignedVariant" type="string">
+  Assigned variant for this user
+</ParamField>
+
+<ParamField body="status" type="'draft' | 'running' | 'paused' | 'completed'" required>
+  Experiment status
+</ParamField>
+
+### Example Response
+
+```json
+{
+  "flags": {
+    "new-checkout-flow": {
+      "key": "new-checkout-flow",
+      "enabled": true,
+      "variant": "variant-b",
+      "value": true,
+      "rolloutPercentage": 50
+    },
+    "show-ai-assistant": {
+      "key": "show-ai-assistant",
+      "enabled": false,
+      "value": false
+    }
+  },
+  "experiments": {
+    "pricing-test": {
+      "key": "pricing-test",
+      "name": "Pricing Page A/B Test",
+      "variants": [
+        { "key": "control", "value": "original" },
+        { "key": "variant-a", "value": "new-design" }
+      ],
+      "assignedVariant": "variant-a",
+      "status": "running"
+    }
+  },
+  "timestamp": "2025-01-15T10:30:00Z"
+}
+```
+
+## Feature Flag Evaluation
+
+### Consistent Hashing
+
+For percentage-based rollouts, use consistent hashing to ensure the same user always gets the same variant:
+
+```typescript
+function assignVariant(userId: string, flagKey: string, rolloutPercentage: number): boolean {
+  const hash = djb2Hash(`${userId}:${flagKey}`);
+  const userPercentage = (hash % 100) + 1; // 1-100
+  return userPercentage <= rolloutPercentage;
+}
+
+function djb2Hash(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 33) ^ str.charCodeAt(i);
+  }
+  return hash >>> 0;
+}
+```
+
+### Targeting Rules
+
+Support targeting based on user properties:
+
+- `equals`: Property equals value
+- `not_equals`: Property does not equal value
+- `contains`: Property contains value (for arrays/strings)
+- `not_contains`: Property does not contain value
+- `greater_than`: Property is greater than value
+- `less_than`: Property is less than value
+- `is_set`: Property exists
+- `is_not_set`: Property does not exist
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Caching">
+    Cache feature flags to reduce database load. Refresh cache when flags are updated.
+  </Accordion>
+  <Accordion title="Consistent Assignment">
+    Use consistent hashing to ensure users always get the same variant.
+  </Accordion>
+  <Accordion title="Targeting">
+    Evaluate targeting rules based on user properties to determine flag values.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Events Endpoint"
+    icon="chart-line"
+    href="/backend-api/events"
+  />
+  <Card
+    title="Identify Endpoint"
+    icon="user"
+    href="/backend-api/identify"
+  />
+</CardGroup>
+

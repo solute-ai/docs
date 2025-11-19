@@ -1,0 +1,97 @@
+---
+title: "Group Endpoint"
+description: "POST /api/group - Associate users with groups (optional)"
+---
+
+## POST /api/group
+
+Associates users with a group or organization. This endpoint is optional.
+
+## Request
+
+### Headers
+
+<ParamField header="Content-Type" type="string" required>
+  `application/json`
+</ParamField>
+
+<ParamField header="X-Api-Key" type="string" required>
+  Your API key
+</ParamField>
+
+### Body
+
+<ParamField body="groupId" type="string" required>
+  Group ID
+</ParamField>
+
+<ParamField body="userId" type="string">
+  User ID
+</ParamField>
+
+<ParamField body="anonymousId" type="string">
+  Anonymous ID
+</ParamField>
+
+<ParamField body="traits" type="object">
+  Group traits (properties that describe the group)
+</ParamField>
+
+<ParamField body="timestamp" type="string" required>
+  ISO 8601 timestamp
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://api.solute.dev/api/group \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: your_api_key" \
+  -d '{
+    "groupId": "company_123",
+    "userId": "user_123",
+    "traits": {
+      "name": "Acme Corp",
+      "plan": "enterprise",
+      "employees": 50
+    },
+    "timestamp": "2025-01-15T10:30:00Z"
+  }'
+```
+
+## Response
+
+### Success Response
+
+<ParamField body="success" type="boolean" required>
+  `true` if the request was successful
+</ParamField>
+
+<ParamField body="groupId" type="string" required>
+  The group ID
+</ParamField>
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "groupId": "company_123"
+}
+```
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Identify Endpoint"
+    icon="user"
+    href="/backend-api/identify"
+  />
+  <Card
+    title="Alias Endpoint"
+    icon="link"
+    href="/backend-api/alias"
+  />
+</CardGroup>
+

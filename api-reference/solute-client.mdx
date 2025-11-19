@@ -1,0 +1,153 @@
+---
+title: "SoluteClient"
+description: "Main SDK client class"
+---
+
+## SoluteClient
+
+The main client class for the Solute SDK. Create an instance to start tracking events and using feature flags.
+
+## Constructor
+
+<ParamField body="config" type="SoluteConfig" required>
+  Configuration object for the SDK. See [Configuration](/getting-started/configuration) for all options.
+</ParamField>
+
+### Example
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  host: 'https://api.solute.dev',
+  debug: false,
+});
+```
+
+## Methods
+
+### Event Tracking
+
+<ParamField body="track" type="(event: string, properties?: EventProperties) => void">
+  Track a custom event. See [Event Tracking Methods](/api-reference/event-tracking#track).
+</ParamField>
+
+<ParamField body="identify" type="(userId: string, traits?: UserTraits) => void">
+  Identify a user. See [Event Tracking Methods](/api-reference/event-tracking#identify).
+</ParamField>
+
+<ParamField body="page" type="(name?: string, properties?: EventProperties, category?: string) => void">
+  Track a page view. See [Event Tracking Methods](/api-reference/event-tracking#page).
+</ParamField>
+
+<ParamField body="group" type="(groupId: string, traits?: GroupTraits) => void">
+  Associate a user with a group. See [Event Tracking Methods](/api-reference/event-tracking#group).
+</ParamField>
+
+<ParamField body="alias" type="(newId: string, previousId?: string) => void">
+  Alias user identities. See [Event Tracking Methods](/api-reference/event-tracking#alias).
+</ParamField>
+
+### Feature Flags
+
+<ParamField body="getFeatureFlag" type="<T>(key: string, options?: FlagOptions) => T | undefined">
+  Get a feature flag value. See [Feature Flag Methods](/api-reference/feature-flags#getfeatureflag).
+</ParamField>
+
+<ParamField body="isFeatureEnabled" type="(key: string, options?: FlagOptions) => boolean">
+  Check if a feature is enabled. See [Feature Flag Methods](/api-reference/feature-flags#isfeatureenabled).
+</ParamField>
+
+<ParamField body="getExperimentVariant" type="(key: string, options?: FlagOptions) => string | undefined">
+  Get an experiment variant. See [Feature Flag Methods](/api-reference/feature-flags#getexperimentvariant).
+</ParamField>
+
+<ParamField body="getAllFlags" type="() => Record<string, FeatureFlag>">
+  Get all feature flags. See [Feature Flag Methods](/api-reference/feature-flags#getallflags).
+</ParamField>
+
+<ParamField body="reloadFeatureFlags" type="(userProperties?: Record<string, any>) => Promise<void>">
+  Reload feature flags from the server. See [Feature Flag Methods](/api-reference/feature-flags#reloadfeatureflags).
+</ParamField>
+
+### User Management
+
+<ParamField body="getUserId" type="() => string | undefined">
+  Get the current user ID. See [User Management Methods](/api-reference/user-management#getuserid).
+</ParamField>
+
+<ParamField body="getAnonymousId" type="() => string">
+  Get the anonymous ID. See [User Management Methods](/api-reference/user-management#getanonymousid).
+</ParamField>
+
+<ParamField body="getSessionId" type="() => string">
+  Get the current session ID. See [User Management Methods](/api-reference/user-management#getsessionid).
+</ParamField>
+
+<ParamField body="reset" type="() => void">
+  Reset user identity and start a new session. See [User Management Methods](/api-reference/user-management#reset).
+</ParamField>
+
+### Utilities
+
+<ParamField body="flush" type="() => Promise<void>">
+  Flush all queued events immediately. See [Event Tracking Methods](/api-reference/event-tracking#flush).
+</ParamField>
+
+## Example
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+// Initialize
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  host: 'https://api.solute.dev',
+  debug: process.env.NODE_ENV === 'development',
+});
+
+// Track events
+solute.track('Button Clicked', {
+  button_id: 'signup-cta',
+});
+
+// Identify user
+solute.identify('user_123', {
+  email: 'user@example.com',
+});
+
+// Check feature flags
+if (solute.isFeatureEnabled('new-checkout')) {
+  // Show new checkout
+}
+
+// Get experiment variant
+const variant = solute.getExperimentVariant('pricing-test');
+```
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Event Tracking Methods"
+    icon="chart-line"
+    href="/api-reference/event-tracking"
+  />
+  <Card
+    title="Feature Flag Methods"
+    icon="flask"
+    href="/api-reference/feature-flags"
+  />
+  <Card
+    title="User Management Methods"
+    icon="user"
+    href="/api-reference/user-management"
+  />
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/getting-started/configuration"
+  />
+</CardGroup>
+

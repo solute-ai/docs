@@ -1,0 +1,248 @@
+---
+title: "Configuration"
+description: "Complete configuration options for Solute SDK"
+---
+
+## Configuration Options
+
+The Solute SDK can be configured with a variety of options to customize its behavior.
+
+## Basic Configuration
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',        // Required
+  host: 'https://api.solute.dev', // Optional
+});
+```
+
+## Configuration Reference
+
+### Required Options
+
+<ParamField body="apiKey" type="string" required>
+  Your Solute API key. Get this from your Solute dashboard.
+</ParamField>
+
+### Optional Options
+
+<ParamField body="host" type="string" default="https://api.solute.dev">
+  The API host URL. Defaults to `https://api.solute.dev`.
+</ParamField>
+
+<ParamField body="debug" type="boolean" default="false">
+  Enable debug logging. Useful for development. Logs all events and API calls to the console.
+</ParamField>
+
+<ParamField body="disabled" type="boolean" default="false">
+  Disable the SDK entirely. All methods will be no-ops. Useful for testing or feature flags.
+</ParamField>
+
+<ParamField body="autoPageViews" type="boolean" default="true">
+  Automatically track page views on route changes (browser only).
+</ParamField>
+
+<ParamField body="capturePageViewOnInit" type="boolean" default="true">
+  Capture a page view event when the SDK initializes.
+</ParamField>
+
+<ParamField body="capturePII" type="boolean" default="true">
+  Capture personally identifiable information (PII) in events. Set to `false` for GDPR compliance.
+</ParamField>
+
+<ParamField body="sessionTimeout" type="number" default="1800000">
+  Session timeout in milliseconds. Defaults to 30 minutes (1800000ms). A new session is created after this period of inactivity.
+</ParamField>
+
+<ParamField body="userId" type="string">
+  Pre-set the user ID. Useful if you already know the user ID at initialization time.
+</ParamField>
+
+<ParamField body="anonymousId" type="string">
+  Pre-set the anonymous ID. Usually auto-generated, but can be set for consistency.
+</ParamField>
+
+<ParamField body="onError" type="(error: Error) => void">
+  Error handler callback. Called when errors occur during event tracking or API calls.
+</ParamField>
+
+## Storage Configuration
+
+<ParamField body="storage.type" type="'localStorage' | 'cookie' | 'memory'" default="'localStorage'">
+  Storage backend to use. `localStorage` for browser, `cookie` for cross-domain tracking, `memory` for server-side or testing.
+</ParamField>
+
+<ParamField body="storage.prefix" type="string" default="'solute_'">
+  Prefix for all storage keys. Useful to avoid conflicts with other libraries.
+</ParamField>
+
+```typescript
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  storage: {
+    type: 'localStorage',
+    prefix: 'solute_',
+  },
+});
+```
+
+## Queue Configuration
+
+<ParamField body="queue.maxQueueSize" type="number" default="1000">
+  Maximum number of events to queue before dropping old events. Prevents memory issues.
+</ParamField>
+
+<ParamField body="queue.flushInterval" type="number" default="10000">
+  Automatic flush interval in milliseconds. Events are sent to the API every N milliseconds. Defaults to 10 seconds.
+</ParamField>
+
+<ParamField body="queue.flushAt" type="number" default="20">
+  Number of events to accumulate before automatically flushing. Events are sent when this many events are queued.
+</ParamField>
+
+<ParamField body="queue.maxBatchSize" type="number" default="100">
+  Maximum number of events to send in a single batch request.
+</ParamField>
+
+```typescript
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  queue: {
+    maxQueueSize: 1000,
+    flushInterval: 10000,  // 10 seconds
+    flushAt: 20,           // Flush at 20 events
+    maxBatchSize: 100,
+  },
+});
+```
+
+## Feature Flags Configuration
+
+<ParamField body="featureFlags.enabled" type="boolean" default="true">
+  Enable feature flags and A/B testing functionality.
+</ParamField>
+
+<ParamField body="featureFlags.refreshInterval" type="number" default="300000">
+  Feature flags refresh interval in milliseconds. Defaults to 5 minutes (300000ms).
+</ParamField>
+
+<ParamField body="featureFlags.trackExposure" type="boolean" default="true">
+  Automatically track exposure events when feature flags are evaluated.
+</ParamField>
+
+```typescript
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  featureFlags: {
+    enabled: true,
+    refreshInterval: 300000,  // 5 minutes
+    trackExposure: true,
+  },
+});
+```
+
+## HTTP Configuration
+
+<ParamField body="http.timeout" type="number" default="10000">
+  Request timeout in milliseconds. Defaults to 10 seconds.
+</ParamField>
+
+<ParamField body="http.maxRetries" type="number" default="3">
+  Maximum number of retry attempts for failed requests.
+</ParamField>
+
+<ParamField body="http.retryDelay" type="number" default="1000">
+  Initial retry delay in milliseconds. Uses exponential backoff.
+</ParamField>
+
+<ParamField body="http.headers" type="Record<string, string>">
+  Additional HTTP headers to include in all requests.
+</ParamField>
+
+```typescript
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  http: {
+    timeout: 10000,
+    maxRetries: 3,
+    retryDelay: 1000,
+    headers: {
+      'X-Custom-Header': 'value',
+    },
+  },
+});
+```
+
+## Complete Example
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  // Required
+  apiKey: process.env.SOLUTE_API_KEY!,
+  
+  // Optional
+  host: 'https://api.solute.dev',
+  debug: process.env.NODE_ENV === 'development',
+  disabled: false,
+  
+  // Session
+  sessionTimeout: 30 * 60 * 1000, // 30 minutes
+  
+  // Storage
+  storage: {
+    type: 'localStorage',
+    prefix: 'solute_',
+  },
+  
+  // Queue
+  queue: {
+    maxQueueSize: 1000,
+    flushInterval: 10000,
+    flushAt: 20,
+    maxBatchSize: 100,
+  },
+  
+  // Feature Flags
+  featureFlags: {
+    enabled: true,
+    refreshInterval: 5 * 60 * 1000, // 5 minutes
+    trackExposure: true,
+  },
+  
+  // HTTP
+  http: {
+    timeout: 10000,
+    maxRetries: 3,
+    retryDelay: 1000,
+  },
+  
+  // Error handling
+  onError: (error) => {
+    console.error('Solute SDK error:', error);
+  },
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Event Tracking"
+    icon="chart-line"
+    href="/guides/event-tracking"
+  >
+    Learn how to track events
+  </Card>
+  <Card
+    title="Feature Flags"
+    icon="flask"
+    href="/guides/feature-flags"
+  >
+    Set up feature flags
+  </Card>
+</CardGroup>
+

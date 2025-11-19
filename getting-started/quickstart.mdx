@@ -1,0 +1,218 @@
+---
+title: "Quick Start"
+description: "Get up and running with Solute SDK in minutes"
+---
+
+## Quick Start
+
+Get started with Solute SDK in just a few steps. Choose your framework below.
+
+## Vanilla JavaScript / TypeScript
+
+### 1. Import and Initialize
+
+```typescript
+import { SoluteClient } from '@solute-ai/sdk';
+
+const solute = new SoluteClient({
+  apiKey: 'your_api_key',
+  host: 'https://api.solute.dev',
+});
+```
+
+### 2. Track Events
+
+```typescript
+// Track custom events
+solute.track('Button Clicked', {
+  button_id: 'signup-cta',
+  page: '/homepage',
+});
+
+// Identify users
+solute.identify('user_123', {
+  email: 'user@example.com',
+  plan: 'premium',
+});
+
+// Track page views
+solute.page('/pricing');
+```
+
+### 3. Use Feature Flags
+
+```typescript
+// Check if feature is enabled
+if (solute.isFeatureEnabled('new-checkout')) {
+  // Show new checkout flow
+}
+
+// Get A/B test variant
+const variant = solute.getExperimentVariant('pricing-test');
+if (variant === 'variant-a') {
+  // Show variant A
+}
+```
+
+## Next.js App Router
+
+### 1. Wrap Your App with SoluteProvider
+
+Create a client component wrapper:
+
+```tsx
+// components/providers/SoluteProviderWrapper.tsx
+'use client';
+
+import { SoluteProvider } from '@solute-ai/sdk/nextjs';
+
+export function SoluteProviderWrapper({ children }) {
+  return (
+    <SoluteProvider
+      config={{
+        apiKey: process.env.NEXT_PUBLIC_SOLUTE_API_KEY!,
+        host: 'https://api.solute.dev',
+        debug: process.env.NODE_ENV === 'development',
+      }}
+    >
+      {children}
+    </SoluteProvider>
+  );
+}
+```
+
+Then use it in your root layout:
+
+```tsx
+// app/layout.tsx
+import { SoluteProviderWrapper } from '@/components/providers/SoluteProviderWrapper';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <SoluteProviderWrapper>
+          {children}
+        </SoluteProviderWrapper>
+      </body>
+    </html>
+  );
+}
+```
+
+### 2. Use Hooks in Client Components
+
+```tsx
+// app/components/SignupButton.tsx
+'use client';
+
+import { useTrack, useFeatureEnabled } from '@solute-ai/sdk/nextjs';
+
+export function SignupButton() {
+  const track = useTrack();
+  const showNewDesign = useFeatureEnabled('new-signup-button');
+
+  const handleClick = () => {
+    track('Signup Button Clicked', {
+      design: showNewDesign ? 'new' : 'old',
+    });
+  };
+
+  return (
+    <button onClick={handleClick}>
+      {showNewDesign ? 'Get Started →' : 'Sign Up'}
+    </button>
+  );
+}
+```
+
+### 3. Server-Side Tracking
+
+```tsx
+// app/page.tsx
+import { trackServerEvent, getServerFeatureFlag } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  // Track server-side event
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'Page Viewed',
+    { page: '/homepage' }
+  );
+
+  // Get feature flag on server
+  const showHero = await getServerFeatureFlag(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'new-hero-section',
+    false
+  );
+
+  return (
+    <div>
+      {showHero ? <NewHeroSection /> : <OldHeroSection />}
+    </div>
+  );
+}
+```
+
+## Environment Variables
+
+Set up your environment variables:
+
+<CodeGroup>
+
+```env .env.local
+# Client-side (public)
+NEXT_PUBLIC_SOLUTE_API_KEY=your_api_key_here
+NEXT_PUBLIC_SOLUTE_HOST=https://api.solute.dev
+
+# Server-side (private)
+SOLUTE_API_KEY=your_api_key_here
+SOLUTE_HOST=https://api.solute.dev
+```
+
+</CodeGroup>
+
+<Tip>
+Use `NEXT_PUBLIC_` prefix for client-side environment variables in Next.js. Server-side variables don't need the prefix.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Event Tracking Guide"
+    icon="chart-line"
+    href="/guides/event-tracking"
+  >
+    Learn about tracking events, page views, and user actions
+  </Card>
+  <Card
+    title="Feature Flags Guide"
+    icon="flask"
+    href="/guides/feature-flags"
+  >
+    Set up feature flags and A/B testing
+  </Card>
+  <Card
+    title="Next.js Integration"
+    icon="react"
+    href="/guides/nextjs-integration"
+  >
+    Deep dive into Next.js integration
+  </Card>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/getting-started/configuration"
+  >
+    Explore all configuration options
+  </Card>
+</CardGroup>
+

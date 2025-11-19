@@ -1,0 +1,98 @@
+---
+title: "User Management Methods"
+description: "API reference for user management methods"
+---
+
+## User Management Methods
+
+Methods for getting user information and managing user sessions.
+
+## getUserId
+
+Get the current user ID.
+
+### Returns
+
+`string | undefined` - The user ID if the user is identified, `undefined` otherwise.
+
+### Example
+
+```typescript
+const userId = solute.getUserId();
+
+if (userId) {
+  console.log('User is logged in:', userId);
+} else {
+  console.log('User is anonymous');
+}
+```
+
+## getAnonymousId
+
+Get the anonymous ID. This is always available, even for identified users.
+
+### Returns
+
+`string` - The anonymous ID.
+
+### Example
+
+```typescript
+const anonymousId = solute.getAnonymousId();
+console.log('Anonymous ID:', anonymousId);
+```
+
+## getSessionId
+
+Get the current session ID.
+
+### Returns
+
+`string` - The session ID.
+
+### Example
+
+```typescript
+const sessionId = solute.getSessionId();
+console.log('Session ID:', sessionId);
+```
+
+## reset
+
+Reset user identity and start a new session. This is typically called when a user logs out.
+
+After calling `reset()`, the SDK will:
+- Clear the user ID
+- Generate a new anonymous ID
+- Start a new session
+- Clear user traits
+
+### Returns
+
+`void`
+
+### Example
+
+```typescript
+// On logout
+function handleLogout() {
+  solute.reset();
+  // Redirect to login page
+}
+```
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="User Identification Guide"
+    icon="book"
+    href="/guides/user-identification"
+  />
+  <Card
+    title="SoluteClient"
+    icon="code"
+    href="/api-reference/solute-client"
+  />
+</CardGroup>
+

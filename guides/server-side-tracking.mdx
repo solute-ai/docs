@@ -1,0 +1,291 @@
+---
+title: "Server-Side Tracking"
+description: "Track events and use feature flags on the server"
+---
+
+## Server-Side Tracking
+
+The Solute SDK provides server-side utilities for tracking events and using feature flags in Next.js Server Components and API routes.
+
+## Why Server-Side Tracking?
+
+Server-side tracking offers several advantages:
+
+- **Privacy**: Track events without exposing tracking code to clients
+- **Reliability**: Events are sent even if JavaScript is disabled
+- **Performance**: No client-side JavaScript overhead
+- **Security**: API keys stay on the server
+
+## Track Server Events
+
+Track events from Server Components or API routes:
+
+```tsx
+// app/actions.ts
+'use server';
+
+import { trackServerEvent } from '@solute-ai/sdk/nextjs';
+
+export async function createOrder(orderData: any) {
+  // Create order...
+  
+  // Track event
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'Order Created',
+    {
+      order_id: orderData.id,
+      amount: orderData.amount,
+      currency: 'USD',
+    }
+  );
+}
+```
+
+## Server Components
+
+Track events in Server Components:
+
+```tsx
+// app/page.tsx
+import { trackServerEvent } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  // Track page view
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'Page Viewed',
+    {
+      page: '/homepage',
+    }
+  );
+
+  return <div>Home Page</div>;
+}
+```
+
+## API Routes
+
+Track events in API routes:
+
+```typescript
+// app/api/checkout/route.ts
+import { trackServerEvent } from '@solute-ai/sdk/nextjs';
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  const data = await request.json();
+
+  // Process checkout...
+  
+  // Track event
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'Checkout Completed',
+    {
+      order_id: data.orderId,
+      amount: data.amount,
+    }
+  );
+
+  return NextResponse.json({ success: true });
+}
+```
+
+## Server-Side Feature Flags
+
+Get feature flags on the server for Server-Side Rendering (SSR):
+
+```tsx
+// app/page.tsx
+import { isServerFeatureEnabled, getServerFeatureFlag } from '@solute-ai/sdk/nextjs';
+
+export default async function HomePage() {
+  // Check if feature is enabled
+  const showHero = await isServerFeatureEnabled(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'new-hero-section',
+    false
+  );
+
+  // Get feature flag value
+  const heroConfig = await getServerFeatureFlag(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'hero-config',
+    { theme: 'default' }
+  );
+
+  return (
+    <div>
+      {showHero ? (
+        <NewHeroSection config={heroConfig} />
+      ) : (
+        <OldHeroSection />
+      )}
+    </div>
+  );
+}
+```
+
+## Server-Side Experiments
+
+Get experiment variants on the server:
+
+```tsx
+// app/pricing/page.tsx
+import { getServerExperimentVariant } from '@solute-ai/sdk/nextjs';
+
+export default async function PricingPage() {
+  const variant = await getServerExperimentVariant(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'pricing-test',
+    'control'
+  );
+
+  return (
+    <div>
+      {variant === 'variant-a' ? (
+        <NewPricingLayout />
+      ) : (
+        <OriginalPricingLayout />
+      )}
+    </div>
+  );
+}
+```
+
+## User Context
+
+Get user context from cookies:
+
+```tsx
+// app/profile/page.tsx
+import { getUserIdFromCookies, getAnonymousIdFromCookies } from '@solute-ai/sdk/nextjs';
+import { trackServerEvent } from '@solute-ai/sdk/nextjs';
+
+export default async function ProfilePage() {
+  const userId = await getUserIdFromCookies();
+  const anonymousId = await getAnonymousIdFromCookies();
+
+  // Track with user context
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    'Profile Viewed',
+    {
+      page: '/profile',
+    },
+    {
+      userId,
+      anonymousId,
+    }
+  );
+
+  return <div>Profile Page</div>;
+}
+```
+
+## Request Context
+
+Get request context (user agent, IP, etc.):
+
+```tsx
+// app/api/track/route.ts
+import { getRequestContext, trackServerEvent } from '@solute-ai/sdk/nextjs';
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  const context = await getRequestContext();
+  const data = await request.json();
+
+  await trackServerEvent(
+    {
+      apiKey: process.env.SOLUTE_API_KEY!,
+      host: 'https://api.solute.dev',
+    },
+    data.event,
+    data.properties,
+    {
+      userAgent: context.userAgent,
+      ip: context.ip,
+    }
+  );
+
+  return NextResponse.json({ success: true });
+}
+```
+
+## Environment Variables
+
+Set up server-side environment variables:
+
+<CodeGroup>
+
+```env .env.local
+# Server-side (private - no NEXT_PUBLIC_ prefix)
+SOLUTE_API_KEY=your_api_key_here
+SOLUTE_HOST=https://api.solute.dev
+```
+
+</CodeGroup>
+
+<Warning>
+Never expose server-side API keys to the client. Don't use `NEXT_PUBLIC_` prefix for server-side variables.
+</Warning>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use server-side tracking for sensitive events">
+    Track sensitive events (purchases, signups) on the server to prevent tampering.
+  </Accordion>
+  <Accordion title="Use feature flags for SSR">
+    Use server-side feature flags to render different content on the server for better SEO and performance.
+  </Accordion>
+  <Accordion title="Keep API keys secure">
+    Never expose server-side API keys. Use environment variables without `NEXT_PUBLIC_` prefix.
+  </Accordion>
+  <Accordion title="Handle errors gracefully">
+    Wrap server-side tracking calls in try-catch blocks to prevent errors from breaking your app.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Next.js Integration"
+    icon="react"
+    href="/guides/nextjs-integration"
+  >
+    Learn about Next.js integration
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/server-utilities"
+  >
+    Complete API reference
+  </Card>
+</CardGroup>
+

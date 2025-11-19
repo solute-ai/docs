@@ -1,0 +1,184 @@
+---
+title: "Feature Flag Methods"
+description: "API reference for feature flag and A/B testing methods"
+---
+
+## Feature Flag Methods
+
+Methods for working with feature flags and A/B testing.
+
+## getFeatureFlag
+
+Get the value of a feature flag. The value can be a boolean, string, number, or object.
+
+<ParamField body="key" type="string" required>
+  Feature flag key.
+</ParamField>
+
+<ParamField body="options" type="FlagOptions">
+  Optional configuration:
+  - `defaultValue`: Default value if flag is not found
+  - `skipTracking`: Skip automatic exposure tracking
+</ParamField>
+
+### Returns
+
+`T | undefined` - The flag value, or `undefined` if not found and no default provided.
+
+### Example
+
+```typescript
+// Get boolean flag
+const enabled = solute.getFeatureFlag<boolean>('new-checkout');
+
+// Get flag with default
+const enabled = solute.getFeatureFlag<boolean>('new-checkout', {
+  defaultValue: false,
+});
+
+// Get typed object flag
+const config = solute.getFeatureFlag<{
+  theme: string;
+  layout: string;
+}>('checkout-config', {
+  defaultValue: { theme: 'light', layout: 'standard' },
+});
+```
+
+## isFeatureEnabled
+
+Check if a feature flag is enabled (returns a boolean).
+
+<ParamField body="key" type="string" required>
+  Feature flag key.
+</ParamField>
+
+<ParamField body="options" type="FlagOptions">
+  Optional configuration:
+  - `defaultValue`: Default value if flag is not found (defaults to `false`)
+  - `skipTracking`: Skip automatic exposure tracking
+</ParamField>
+
+### Returns
+
+`boolean` - `true` if the feature is enabled, `false` otherwise.
+
+### Example
+
+```typescript
+// Simple check
+if (solute.isFeatureEnabled('new-checkout')) {
+  // Show new checkout
+}
+
+// With default
+const enabled = solute.isFeatureEnabled('new-checkout', {
+  defaultValue: false,
+});
+```
+
+## getExperimentVariant
+
+Get the assigned variant for an A/B test experiment.
+
+<ParamField body="key" type="string" required>
+  Experiment key.
+</ParamField>
+
+<ParamField body="options" type="FlagOptions">
+  Optional configuration:
+  - `defaultValue`: Default variant if experiment is not found
+  - `skipTracking`: Skip automatic exposure tracking
+</ParamField>
+
+### Returns
+
+`string | undefined` - The variant key, or `undefined` if not found and no default provided.
+
+### Example
+
+```typescript
+// Get variant
+const variant = solute.getExperimentVariant('pricing-test');
+
+if (variant === 'variant-a') {
+  // Show variant A
+} else if (variant === 'variant-b') {
+  // Show variant B
+}
+
+// With default
+const variant = solute.getExperimentVariant('pricing-test', {
+  defaultValue: 'control',
+});
+```
+
+## getAllFlags
+
+Get all feature flags and experiments at once.
+
+### Returns
+
+`Record<string, FeatureFlag>` - Object mapping flag keys to flag objects.
+
+### Example
+
+```typescript
+const allFlags = solute.getAllFlags();
+
+// Access individual flags
+if (allFlags['new-checkout-flow']?.enabled) {
+  // Feature is enabled
+}
+
+// Get experiment variant
+const experiment = allFlags['pricing-test'];
+if (experiment?.variant === 'variant-a') {
+  // Show variant A
+}
+```
+
+## reloadFeatureFlags
+
+Manually reload feature flags from the server.
+
+<ParamField body="userProperties" type="Record<string, any>">
+  Optional updated user properties for targeting. If provided, flags will be re-evaluated with these properties.
+</ParamField>
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```typescript
+// Reload all flags
+await solute.reloadFeatureFlags();
+
+// Reload with updated user properties
+await solute.reloadFeatureFlags({
+  plan: 'premium',
+  country: 'US',
+});
+```
+
+<Tip>
+Feature flags are automatically refreshed based on your configuration. You typically don't need to manually reload them.
+</Tip>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Feature Flags Guide"
+    icon="book"
+    href="/guides/feature-flags"
+  />
+  <Card
+    title="SoluteClient"
+    icon="code"
+    href="/api-reference/solute-client"
+  />
+</CardGroup>
+

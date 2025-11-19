@@ -1,0 +1,247 @@
+---
+title: "React Hooks"
+description: "API reference for React hooks in Next.js"
+---
+
+## React Hooks
+
+React hooks for using the Solute SDK in Next.js client components.
+
+<Warning>
+All hooks must be used in client components. Add `'use client'` directive to your component file.
+</Warning>
+
+## useTrack
+
+Hook for tracking events.
+
+### Returns
+
+`(event: string, properties?: EventProperties) => void` - Function to track events.
+
+### Example
+
+```tsx
+'use client';
+
+import { useTrack } from '@solute-ai/sdk/nextjs';
+
+export function SignupButton() {
+  const track = useTrack();
+
+  const handleClick = () => {
+    track('Signup Button Clicked', {
+      button_id: 'header-cta',
+    });
+  };
+
+  return <button onClick={handleClick}>Sign Up</button>;
+}
+```
+
+## useIdentify
+
+Hook for identifying users.
+
+### Returns
+
+`(userId: string, traits?: UserTraits) => void` - Function to identify users.
+
+### Example
+
+```tsx
+'use client';
+
+import { useIdentify } from '@solute-ai/sdk/nextjs';
+
+export function LoginForm() {
+  const identify = useIdentify();
+
+  const handleLogin = async (userData: { id: string; email: string }) => {
+    identify(userData.id, {
+      email: userData.email,
+    });
+  };
+
+  return <form onSubmit={handleLogin}>...</form>;
+}
+```
+
+## useFeatureEnabled
+
+Hook to check if a feature is enabled.
+
+<ParamField body="key" type="string" required>
+  Feature flag key.
+</ParamField>
+
+<ParamField body="options" type="FlagOptions">
+  Optional configuration.
+</ParamField>
+
+### Returns
+
+`boolean` - `true` if the feature is enabled, `false` otherwise.
+
+### Example
+
+```tsx
+'use client';
+
+import { useFeatureEnabled } from '@solute-ai/sdk/nextjs';
+
+export function CheckoutButton() {
+  const showNewCheckout = useFeatureEnabled('new-checkout-flow');
+
+  return (
+    <div>
+      {showNewCheckout ? (
+        <NewCheckoutButton />
+      ) : (
+        <OldCheckoutButton />
+      )}
+    </div>
+  );
+}
+```
+
+## useFeatureFlag
+
+Hook to get a feature flag value.
+
+<ParamField body="key" type="string" required>
+  Feature flag key.
+</ParamField>
+
+<ParamField body="options" type="FlagOptions">
+  Optional configuration.
+</ParamField>
+
+### Returns
+
+`T | undefined` - The flag value, or `undefined` if not found.
+
+### Example
+
+```tsx
+'use client';
+
+import { useFeatureFlag } from '@solute-ai/sdk/nextjs';
+
+export function CheckoutPage() {
+  const config = useFeatureFlag<{ theme: string }>('checkout-config', {
+    defaultValue: { theme: 'light' },
+  });
+
+  return <div className={config?.theme}>Checkout</div>;
+}
+```
+
+## useExperiment
+
+Hook to get an experiment variant.
+
+<ParamField body="key" type="string" required>
+  Experiment key.
+</ParamField>
+
+<ParamField body="options" type="FlagOptions">
+  Optional configuration.
+</ParamField>
+
+### Returns
+
+`string | undefined` - The variant key, or `undefined` if not found.
+
+### Example
+
+```tsx
+'use client';
+
+import { useExperiment } from '@solute-ai/sdk/nextjs';
+
+export function PricingPage() {
+  const variant = useExperiment('pricing-test');
+
+  return (
+    <div>
+      {variant === 'variant-a' ? (
+        <NewPricingLayout />
+      ) : (
+        <OriginalPricingLayout />
+      )}
+    </div>
+  );
+}
+```
+
+## useUser
+
+Hook to get user information.
+
+### Returns
+
+`{ userId: string | undefined; anonymousId: string; sessionId: string }` - User information object.
+
+### Example
+
+```tsx
+'use client';
+
+import { useUser } from '@solute-ai/sdk/nextjs';
+
+export function UserInfo() {
+  const { userId, anonymousId, sessionId } = useUser();
+
+  return (
+    <div>
+      <p>User ID: {userId || 'Anonymous'}</p>
+      <p>Anonymous ID: {anonymousId}</p>
+      <p>Session: {sessionId}</p>
+    </div>
+  );
+}
+```
+
+## useSolute
+
+Hook to access the full SDK instance and all methods.
+
+### Returns
+
+`{ client: SoluteClient; track: Function; identify: Function; page: Function; group: Function; alias: Function; reset: Function; flush: Function }` - Object with SDK instance and convenience methods.
+
+### Example
+
+```tsx
+'use client';
+
+import { useSolute } from '@solute-ai/sdk/nextjs';
+
+export function MyComponent() {
+  const { track, identify, client } = useSolute();
+
+  const handleAction = () => {
+    track('Action', { type: 'custom' });
+    identify('user_123', { email: 'user@example.com' });
+  };
+
+  return <button onClick={handleAction}>Action</button>;
+}
+```
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Next.js Integration Guide"
+    icon="book"
+    href="/guides/nextjs-integration"
+  />
+  <Card
+    title="Server Utilities"
+    icon="server"
+    href="/api-reference/server-utilities"
+  />
+</CardGroup>
+

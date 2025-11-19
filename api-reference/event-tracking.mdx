@@ -1,0 +1,209 @@
+---
+title: "Event Tracking Methods"
+description: "API reference for event tracking methods"
+---
+
+## Event Tracking Methods
+
+Methods for tracking events, identifying users, and managing user sessions.
+
+## track
+
+Track a custom event with optional properties.
+
+<ParamField body="event" type="string" required>
+  Event name. Use descriptive names like `Button Clicked` or `Purchase Completed`.
+</ParamField>
+
+<ParamField body="properties" type="EventProperties">
+  Optional event properties. Can include any JSON-serializable data.
+</ParamField>
+
+### Returns
+
+`void`
+
+### Example
+
+```typescript
+// Simple event
+solute.track('Button Clicked');
+
+// Event with properties
+solute.track('Purchase Completed', {
+  product_id: 'prod_123',
+  price: 99.99,
+  currency: 'USD',
+});
+```
+
+## identify
+
+Identify a user and associate events with them.
+
+<ParamField body="userId" type="string" required>
+  User ID. Should be a unique identifier for the user.
+</ParamField>
+
+<ParamField body="traits" type="UserTraits">
+  Optional user traits. Properties that describe the user.
+</ParamField>
+
+### Returns
+
+`void`
+
+### Example
+
+```typescript
+// Identify with traits
+solute.identify('user_123', {
+  email: 'user@example.com',
+  name: 'John Doe',
+  plan: 'premium',
+});
+
+// Identify without traits
+solute.identify('user_123');
+```
+
+## page
+
+Track a page view.
+
+<ParamField body="name" type="string">
+  Optional page name. If not provided, will use the current page path.
+</ParamField>
+
+<ParamField body="properties" type="EventProperties">
+  Optional page properties.
+</ParamField>
+
+<ParamField body="category" type="string">
+  Optional page category.
+</ParamField>
+
+### Returns
+
+`void`
+
+### Example
+
+```typescript
+// Simple page view
+solute.page('/pricing');
+
+// Page view with properties
+solute.page('/pricing', {
+  category: 'Marketing',
+  title: 'Pricing Page',
+});
+
+// Page view with name and category
+solute.page('Pricing Page', {
+  plan: 'premium',
+}, 'Marketing');
+```
+
+## group
+
+Associate a user with a group or organization.
+
+<ParamField body="groupId" type="string" required>
+  Group ID. Should be a unique identifier for the group.
+</ParamField>
+
+<ParamField body="traits" type="GroupTraits">
+  Optional group traits. Properties that describe the group.
+</ParamField>
+
+### Returns
+
+`void`
+
+### Example
+
+```typescript
+solute.group('company_123', {
+  name: 'Acme Corp',
+  plan: 'enterprise',
+  employees: 50,
+});
+```
+
+## alias
+
+Merge anonymous and identified user identities.
+
+<ParamField body="newId" type="string" required>
+  New user ID (the identified user ID).
+</ParamField>
+
+<ParamField body="previousId" type="string">
+  Previous user ID (usually the anonymous ID). If not provided, will use the current anonymous ID.
+</ParamField>
+
+### Returns
+
+`void`
+
+### Example
+
+```typescript
+// Alias anonymous ID with user ID
+const anonymousId = solute.getAnonymousId();
+solute.identify('user_123');
+solute.alias('user_123', anonymousId);
+```
+
+## reset
+
+Reset user identity and start a new session. Useful when a user logs out.
+
+### Returns
+
+`void`
+
+### Example
+
+```typescript
+// On logout
+solute.reset();
+```
+
+## flush
+
+Force immediate sending of all queued events.
+
+### Returns
+
+`Promise<void>`
+
+### Example
+
+```typescript
+// Flush events before page unload
+window.addEventListener('beforeunload', () => {
+  solute.flush();
+});
+```
+
+<Tip>
+Events are automatically flushed based on your queue configuration. You typically don't need to call `flush()` manually.
+</Tip>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Event Tracking Guide"
+    icon="book"
+    href="/guides/event-tracking"
+  />
+  <Card
+    title="SoluteClient"
+    icon="code"
+    href="/api-reference/solute-client"
+  />
+</CardGroup>
+

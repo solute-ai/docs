@@ -1,0 +1,93 @@
+---
+title: "Alias Endpoint"
+description: "POST /api/alias - Merge user identities (optional)"
+---
+
+## POST /api/alias
+
+Merges user identities. This endpoint is optional but recommended for preserving event history when users sign up.
+
+## Request
+
+### Headers
+
+<ParamField header="Content-Type" type="string" required>
+  `application/json`
+</ParamField>
+
+<ParamField header="X-Api-Key" type="string" required>
+  Your API key
+</ParamField>
+
+### Body
+
+<ParamField body="userId" type="string" required>
+  New user ID (the identified user ID)
+</ParamField>
+
+<ParamField body="previousId" type="string" required>
+  Previous user ID (usually the anonymous ID)
+</ParamField>
+
+<ParamField body="timestamp" type="string" required>
+  ISO 8601 timestamp
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://api.solute.dev/api/alias \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: your_api_key" \
+  -d '{
+    "userId": "user_123",
+    "previousId": "anon_456",
+    "timestamp": "2025-01-15T10:30:00Z"
+  }'
+```
+
+## Response
+
+### Success Response
+
+<ParamField body="success" type="boolean" required>
+  `true` if the request was successful
+</ParamField>
+
+<ParamField body="userId" type="string" required>
+  The new user ID
+</ParamField>
+
+<ParamField body="previousId" type="string" required>
+  The previous user ID
+</ParamField>
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "userId": "user_123",
+  "previousId": "anon_456"
+}
+```
+
+## Use Case
+
+This endpoint is typically called when a user signs up. It merges their anonymous identity with their new user ID, ensuring all events from before signup are associated with the user.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card
+    title="Identify Endpoint"
+    icon="user"
+    href="/backend-api/identify"
+  />
+  <Card
+    title="Group Endpoint"
+    icon="users"
+    href="/backend-api/group"
+  />
+</CardGroup>
+
